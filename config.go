@@ -1,5 +1,5 @@
-// Package go.config provides support for loading config options from
-// a file, leveraging configuration defined using the `flag' package.
+// Package config provides support for loading config options from a
+// file, leveraging configuration defined using the `flag' package.
 //
 // Config files should consist of lines of the form
 //
@@ -25,9 +25,9 @@ import (
 	"strings"
 )
 
-// Load configuration from a dotfile. Looks for $HOME/.basename, and,
-// if it exists, opens it and calls ParseConfig. Returns silently if
-// no such file exists.
+// LoadConfig loads configuration from a dotfile. It looks for
+// $HOME/.basename, and, if it exists, opens it and calls
+// ParseConfig. Returns silently if no such file exists.
 func LoadConfig(flags *flag.FlagSet, basename string) error {
 	path := os.ExpandEnv(fmt.Sprintf("${HOME}/.%s", basename))
 	f, err := os.Open(path)
@@ -41,8 +41,8 @@ func LoadConfig(flags *flag.FlagSet, basename string) error {
 	return ParseConfig(flags, f)
 }
 
-// Parse a config file, using the provided FlagSet to look up, parse,
-// and store values.
+// ParseConfig parses a config file, using the provided FlagSet to
+// look up, parse, and store values.
 func ParseConfig(flags *flag.FlagSet, f io.Reader) error {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -53,14 +53,14 @@ func ParseConfig(flags *flag.FlagSet, f io.Reader) error {
 
 		bits := strings.SplitN(line, "=", 2)
 		if len(bits) != 2 {
-			return fmt.Errorf("Illegal config line: `%s'", line)
+			return fmt.Errorf("illegal config line: `%s'", line)
 		}
 
 		key := strings.TrimSpace(bits[0])
 		value := strings.TrimSpace(bits[1])
 
 		if flag := flags.Lookup(key); flag == nil {
-			return fmt.Errorf("Unknown option `%s'", bits[0])
+			return fmt.Errorf("unknown option `%s'", bits[0])
 		}
 
 		if err := flags.Set(key, value); err != nil {
