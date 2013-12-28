@@ -60,7 +60,7 @@ func ParseConfig(flags *flag.FlagSet, f io.Reader) error {
 		value := strings.TrimSpace(bits[1])
 
 		if flag := flags.Lookup(key); flag == nil {
-			return fmt.Errorf("unknown option `%s'", bits[0])
+			return fmt.Errorf("unknown option `%s'", key)
 		}
 
 		if err := flags.Set(key, value); err != nil {
