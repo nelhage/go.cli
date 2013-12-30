@@ -10,10 +10,10 @@
 //   # this is a comment
 //
 // Configuration options are loaded by passing in a flag.FlagSet; keys
-// and values are looked up, parsed, and stored using the FlagSet. For
-// many applications, you can just pass in flag.CommandLine to parse
-// your explose your application's default set of command-line options
-// as configuration frobs.
+//  and values are looked up, parsed, and stored using the
+//  FlagSet. For many applications, you can just pass in
+//  flag.CommandLine to expose your application's default set of
+//  command-line options as configuration frobs.
 package config
 
 import (
