@@ -42,7 +42,7 @@ func CompleteIfRequested(completer Completer) {
 		os.Exit(1)
 	}
 
-	cl := parseLineForCompletion(line, int(point))
+	cl := parseLineForCompletion(line, int(point))[1:]
 
 	for _, word := range completer.Complete(cl) {
 		fmt.Println(word)
@@ -106,7 +106,6 @@ func completeFlags(cl CommandLine, flags *flag.FlagSet) (completions []string, r
 	if len(cl) == 0 {
 		return nil, cl
 	}
-	cl = cl[1:]
 	var inFlag string
 	for len(cl) > 1 {
 		w := cl[0]
