@@ -1,3 +1,8 @@
+// Package completion provides tools for writing programmable
+// tab-completion for command-line programs written in Go. Programs
+// using this package implement the programmable completion entirely
+// in Go alongside their normal program code, leveraging existing
+// abstractions.
 package completion
 
 import (
@@ -11,20 +16,46 @@ import (
 
 var completionLog = log.New(os.Stderr, "completion: ", log.LstdFlags)
 
+// A CommandLine represents a parsed command-line that is being
+// tab-completed. A CommandLine consists of only the words up to and
+// including the word being completed -- The cursor is always
+// positioned at the end of the final word in a CommandLine.
+//
+// By convention, a CommandLine does not include the program name
+// (e.g. os.Args[0] for a top-level completion).
 type CommandLine []string
-type Completer interface {
-	Complete(CommandLine) []string
-}
-type FunctionCompleter func(CommandLine) []string
 
-func (f FunctionCompleter) Complete(cl CommandLine) []string {
-	return f(cl)
-}
-
+// CurrentWord returns the last word of a CommandLine -- the one being
+// entered.
 func (c CommandLine) CurrentWord() string {
 	return c[len(c)-1]
 }
 
+// A Completer is the primary interface to tab-completion. A Completer
+// takes a CommandLine and returns a slice of possible completions for
+// the final word of the command line.
+type Completer interface {
+	Complete(CommandLine) []string
+}
+
+// A FunctionCompleter is a convenience function to turn a handler
+// function into a Completer
+type FunctionCompleter func(CommandLine) []string
+
+// Complete implements the Completer interface for FunctionCompleter
+// by just calling the function.
+func (f FunctionCompleter) Complete(cl CommandLine) []string {
+	return f(cl)
+}
+
+// CompleteIfRequested is the toplevel interface to completion. It
+// should be invoked by a CLI early on inside main(), with a toplevel
+// Completer to complete the entire command line. CompleteIfRequested
+// will check if the program is being invoked in completion mode (by
+// default, this means with a single '-do-completion' flag), and if
+// so, it will parse the command line (provided by the shell in the
+// COMP_LINE and COMP_WORD environment variables), invoke the
+// Completer, print the completions, and exit.
 func CompleteIfRequested(completer Completer) {
 	if len(os.Args) <= 1 || os.Args[1] != "-do-completion" {
 		return
@@ -52,8 +83,8 @@ func CompleteIfRequested(completer Completer) {
 
 func parseLineForCompletion(line string, point int) CommandLine {
 	var cl CommandLine
-	var quote rune = 0
-	var backslash bool = false
+	var quote rune
+	var backslash bool
 	var word []rune
 	for _, char := range line[:point] {
 		if backslash {
@@ -159,6 +190,13 @@ type flagCompleter struct {
 	inner Completer
 }
 
+// CompleterWithFlags augments a Completer to be flag-aware given a
+// particular flag.FlagSet. If the word being completed is a
+// command-line flag, the resulting Completer will complete available
+// flags using the FlagSet; If it a flag value, it will suppress
+// completion, and if the word is empty and the command-line does not
+// yet include a non-flag value, the completer will return both all
+// flags and the results of invoking the underlying Completer.
 func CompleterWithFlags(flags *flag.FlagSet, completer Completer) Completer {
 	return &flagCompleter{
 		flags: flags,
@@ -188,6 +226,8 @@ func (c setCompleter) Complete(cl CommandLine) (completions []string) {
 	return completions
 }
 
+// SetCompleter returns a Completer that completes from a fixed set of
+// possible words.
 func SetCompleter(strs []string) Completer {
 	return setCompleter(strs)
 }
